@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.conf import settings
 import random
 from django.contrib.auth.tokens import default_token_generator
@@ -32,11 +34,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.profile.otp = otp
         user.profile.save()
 
+        html_message = render_to_string('emails/otp_verification.html', {
+            'username': user.username,
+            'otp': otp,
+            'app_name': 'Tanom'
+        })
+        
+        plain_message = strip_tags(html_message)
+
         send_mail(
-            'Your verification code',
-            f'Use this code to verify your account: {otp}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
+            subject='Your Tanom Verification Code',
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,
             fail_silently=False
         )
 
