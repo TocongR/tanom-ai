@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tanom_frontend/screens/dashboard_screen.dart';
 import 'package:tanom_frontend/screens/login_screen.dart';
+import 'package:tanom_frontend/screens/verify_otp_screen.dart';
 import 'package:tanom_frontend/services/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -40,6 +39,16 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
     _animationController.forward();
   }
 
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
   void handleRegister() async {
     if(!_formKey.currentState!.validate()) return;
 
@@ -48,52 +57,34 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
     });
 
     try {
-      final success = await apiService.register(
+      final result = await apiService.register(
         usernameController.text.trim(),
         emailController.text.trim(),
         passwordController.text,
       );
 
-      if(success) {
-        final loginSuccess = await apiService.login(
-          usernameController.text.trim(),
-          passwordController.text.trim(),
+      if(result['success']) {
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(
+            builder: (_) => VerifyOtpScreen(
+              username: usernameController.text.trim()
+            )
+          )
         );
-
-        if(loginSuccess) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => DashboardScreen()) 
-          );
-        } else {
-          _showMessage('Registration Successful. Now you can log in.');
-          Navigator.pop(context);
-        }
       } else {
-        _showErrorMessage('Registration Failed');
+        _showErrorMessage(result['error']);
       }
     } catch (e) {
-      _showErrorMessage('Connection Error');
+      _showErrorMessage('Connection error. Please try again.');
     } finally {
       if(mounted) {
         setState(() {
-          _isLoading = true;
+          _isLoading = false;
         });
       }
     }
    }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-      )
-    );
-  }
 
 
   void _showErrorMessage(String message) {

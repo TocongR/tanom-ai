@@ -1,1 +1,19 @@
+# Django
+db.sqlite3
+*.sqlite3
+.env
+__pycache__/
+*.pyc
 venv/
+
+# Flutter
+build/
+.dart_tool/
+.pub/
+*.lock
+
+# Common
+.vscode/
+.idea/
+.DS_Store
+*.log

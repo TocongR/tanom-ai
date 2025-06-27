@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tanom_frontend/screens/dashboard_screen.dart';
+import 'package:tanom_frontend/screens/home_screen.dart';
 import 'package:tanom_frontend/screens/register_screen.dart';
+import 'package:tanom_frontend/screens/verify_otp_screen.dart';
 import 'package:tanom_frontend/services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
- @override
+  @override
   void initState()  {
     super.initState();
 
@@ -36,6 +36,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     ));
     _animationController.forward();
   }
+  
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
 
   void handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -45,26 +53,32 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     });
 
     try {
-      final success = await apiService.login(
+      final result = await apiService.login(
         usernameController.text.trim(), 
         passwordController.text,
       );
 
-      if(success) {
+      if(result['success'] == true) {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, seconaryAnimation) => DashboardScreen(),
+            pageBuilder: (context, animation, seconaryAnimation) => HomeScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },
           ), 
         );
-      } else {
-        _showErrorMessage("Invalid Credentials");
+      } else if (result['requiresOtp'] == true) {
+        _showErrorMessage(result['error']);
+        Navigator.push(
+          context, 
+          MaterialPageRoute(builder: (_) => VerifyOtpScreen(username: usernameController.text.trim())),
+        );
+      } else if(result['invalidCred'] == true){
+        _showErrorMessage(result['error']);
       }
     } catch(e) {
-      _showErrorMessage("Connection Error");
+       _showErrorMessage('Connection error. Please try again.');
     } finally {
       if(mounted){
         setState(() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tanom_frontend/screens/dashboard_screen.dart';
+import 'package:tanom_frontend/screens/home_screen.dart';
 import 'package:tanom_frontend/screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget{
@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if(token != null) {
       Navigator.pushReplacement(
         context, 
-        MaterialPageRoute(builder: (_) => DashboardScreen())
+        MaterialPageRoute(builder: (_) => HomeScreen())
       );
     } else {
       Navigator.pushReplacement(
